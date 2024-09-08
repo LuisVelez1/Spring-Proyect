@@ -75,13 +75,12 @@ public class AuthenticationController {
             AuthResponse authResponse = this.userDetailsService.loginUser(userRequest);
             return new ResponseEntity<>(authResponse, HttpStatus.OK);
         } catch (UserNotFoundException e) {
-            // Manejo de la excepción si el usuario no existe
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (BadCredentialsException e) {
-            // Manejo de la excepción si las credenciales son incorrectas
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         } catch (Exception e) {
-            // Manejo de cualquier otra excepción inesperada
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }

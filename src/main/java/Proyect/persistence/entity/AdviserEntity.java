@@ -19,5 +19,6 @@ public class AdviserEntity {
     private String phone;
     private boolean state;
     private String role;
+    private String imageUrl;
     private String fkEmail;
 }

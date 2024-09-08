@@ -19,4 +19,5 @@ public class ClientEntity {
     private String phone;
     private boolean state;
     private String role;
+    private String imageURL;
 }

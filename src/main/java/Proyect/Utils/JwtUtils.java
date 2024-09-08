@@ -43,6 +43,7 @@ public class JwtUtils {
                 .sign(algorithm);
     }
 
+
     public DecodedJWT validateToken (String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(this.privateKey);
@@ -58,7 +59,7 @@ public class JwtUtils {
         }
     }
 
-    public String extracEmail(DecodedJWT decodedJWT) {
+    public String extractEmail(DecodedJWT decodedJWT) {
         return decodedJWT.getSubject().toString();
     }
     public Claim getSpecificClaim(DecodedJWT decodedJWT, String claimName) {

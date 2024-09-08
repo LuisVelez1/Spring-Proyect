@@ -32,24 +32,25 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-            String jwtToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String jwtToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-            if(jwtToken != null) {
-                jwtToken = jwtToken.substring(7);
+        if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
+            jwtToken = jwtToken.substring(7);
+            DecodedJWT decodedJWT = jwtUtils.validateToken(jwtToken);
 
-                DecodedJWT decodedJWT = jwtUtils.validateToken(jwtToken);
+            String email = jwtUtils.extractEmail(decodedJWT);
+            String stringAuthorities = jwtUtils.getSpecificClaim(decodedJWT, "authorities").asString();
 
-                String email = jwtUtils.extracEmail(decodedJWT);
-                String stringAuthorities = jwtUtils.getSpecificClaim(decodedJWT, "authorities").asString();
-
+            if (stringAuthorities != null) {
                 Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
 
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 Authentication authenticationToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
                 context.setAuthentication(authenticationToken);
                 SecurityContextHolder.setContext(context);
-
             }
-            filterChain.doFilter(request, response);
+        }
+        filterChain.doFilter(request, response);
     }
+
 }

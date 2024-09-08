@@ -2,6 +2,7 @@ package Proyect.service.interfaces;
 
 import Proyect.presentation.dto.ClientDTO;
 
-public interface IClientService {
+public interface
+IClientService {
     ClientDTO save (ClientDTO clientDto);
 }
