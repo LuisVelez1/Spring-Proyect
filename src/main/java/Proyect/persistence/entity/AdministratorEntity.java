@@ -19,5 +19,5 @@ public class AdministratorEntity {
     private String phone;
     private boolean state;
     private String role;
-    private String imageUrl;
+    private String imageURL;
 }

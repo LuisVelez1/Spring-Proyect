@@ -1,10 +1,9 @@
 package Proyect.service.implementation;
 
+import Proyect.Utils.SecurityUtils;
 import Proyect.persistence.entity.AdministratorEntity;
-import Proyect.persistence.entity.AdviserEntity;
 import Proyect.persistence.entity.ClientEntity;
 import Proyect.persistence.persistence.AdminRepository;
-import Proyect.persistence.persistence.AdviserRepository;
 import Proyect.persistence.persistence.ClientRepository;
 import Proyect.presentation.dto.ImageDTO;
 import Proyect.service.interfaces.IImageService;
@@ -26,7 +25,6 @@ public class ImageServiceImpl implements IImageService {
 
     private final BlobServiceClient blobServiceClient;
     private final ClientRepository clientRepository;
-    private final AdviserRepository adviserRepository;
     private final AdminRepository adminRepository;
     private final ModelMapper modelMapper;
 
@@ -35,9 +33,11 @@ public class ImageServiceImpl implements IImageService {
 
     @Override
     public ImageDTO uploadImageAndSaveURL(ImageDTO imageDTO) {
+
         MultipartFile file = imageDTO.getFile();
-        String role = imageDTO.getRole();
         String email = imageDTO.getEmail();
+
+        String role = SecurityUtils.getCurrentUserRole();
 
         String blobName = UUID.randomUUID() + "-" + file.getOriginalFilename();
         var blobClient = blobServiceClient.getBlobContainerClient(containerName).getBlobClient(blobName);
@@ -56,39 +56,33 @@ public class ImageServiceImpl implements IImageService {
             case "ROLE_CLIENT":
                 updateClientImage(email, imageDTO);
                 break;
-            case "ROLE_ADVISER":
-                updateAdviserImage(email, imageDTO);
-                break;
             case "ROLE_ADMINISTRATOR":
-                updateAdministratorImage(email, imageDTO);
+                if (isClientEmail(email)) {
+                    updateClientImage(email, imageDTO);
+                } else {
+                    updateAdministratorImage(email, imageDTO);
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Role not recognized: " + role);
         }
-
         return imageDTO;
     }
 
+    private boolean isClientEmail(String email) {
+        return clientRepository.findByEmail(email).isPresent();
+    }
 
     private void updateClientImage(String email, ImageDTO imageDTO) {
         Optional<ClientEntity> clientOptional = clientRepository.findByEmail(email);
         if (clientOptional.isPresent()) {
             ClientEntity client = clientOptional.get();
+            String originalRole = client.getRole();
             modelMapper.map(imageDTO, client);
+            client.setRole(originalRole);
             clientRepository.save(client);
         } else {
             throw new IllegalArgumentException("Client with email " + email + " not found");
-        }
-    }
-
-    private void updateAdviserImage(String email, ImageDTO imageDTO) {
-        Optional<AdviserEntity> adviserOptional = adviserRepository.findByEmail(email);
-        if (adviserOptional.isPresent()) {
-            AdviserEntity adviser = adviserOptional.get();
-            modelMapper.map(imageDTO, adviser);
-            adviserRepository.save(adviser);
-        } else {
-            throw new IllegalArgumentException("Adviser with email " + email + " not found");
         }
     }
 

@@ -13,18 +13,18 @@ import org.springframework.http.HttpHeaders;
 
 @OpenAPIDefinition (
         info = @Info(
-                title = "API PROYECT",
-                description = "Our application provides different types of travel agency services",
-                termsOfService = "www.odysseyExpedition/termsAndConditions",
+                title = "API PROJECT",
+                description = "It is a product management system, where administrators can add products and customers can view and buy, in turn administrators can manage customer information.",
+                termsOfService = "www.luisVelez/termsAndConditions",
                 version = "1.0.0",
                 contact = @Contact(
                         name = "Luis Velez",
-                        url = "www.odysseyExpedition/contact",
-                        email = "codeDragon@gmail.com"
+                        url = "www.LuisVelez/contact",
+                        email = "luis@gmail.com"
                 ),
                 license = @License(
-                        name = "Standard Software Use License for Code Dragon",
-                        url = "www.odysseyExpedition/license"
+                        name = "Standard Software Use License for Luis Velez ",
+                        url = "www.RealLicense/license"
                 )
         ),
         servers = {

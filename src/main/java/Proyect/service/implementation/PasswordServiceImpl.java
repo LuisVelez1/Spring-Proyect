@@ -1,10 +1,8 @@
 package Proyect.service.implementation;
 
 import Proyect.persistence.entity.AdministratorEntity;
-import Proyect.persistence.entity.AdviserEntity;
 import Proyect.persistence.entity.ClientEntity;
 import Proyect.persistence.persistence.AdminRepository;
-import Proyect.persistence.persistence.AdviserRepository;
 import Proyect.persistence.persistence.ClientRepository;
 import Proyect.presentation.dto.UpdatePasswordDTO;
 import Proyect.presentation.dto.UpdatePasswordResponseDTO;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class PasswordServiceImpl implements IPasswordService {
     private final ClientRepository clientRepository;
     private final AdminRepository adminRepository;
-    private final AdviserRepository adviserRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -48,16 +45,6 @@ public class PasswordServiceImpl implements IPasswordService {
 
                 admin.setPassword(passwordEncoder.encode(newPassword));
                 adminRepository.save(admin);
-                break;
-            case "ROLE_ADVISER":
-                AdviserEntity adviser = adviserRepository.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("Adviser not found"));
-                if(!passwordEncoder.matches(oldPassword, adviser.getPassword())) {
-                    throw new RuntimeException("Current Password is incorrect");
-                }
-
-                adviser.setPassword(passwordEncoder.encode(newPassword));
-                adviserRepository.save(adviser);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid role: " + role);

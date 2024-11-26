@@ -1,10 +1,8 @@
 package Proyect.presentation.controller;
 
+import Proyect.Utils.SecurityUtils;
 import Proyect.persistence.entity.ClientEntity;
-import Proyect.presentation.dto.ClientDTO;
-import Proyect.presentation.dto.ImageDTO;
-import Proyect.presentation.dto.UpdatePasswordDTO;
-import Proyect.presentation.dto.UpdatePasswordResponseDTO;
+import Proyect.presentation.dto.*;
 import Proyect.service.SendEmailService;
 import Proyect.service.implementation.ImageServiceImpl;
 import Proyect.service.interfaces.IClientService;
@@ -23,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -86,12 +85,13 @@ public class ClientController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+
     // UploadImage
     @PostMapping("/upload")
-    @PreAuthorize("hasAnyRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMINISTRATOR')")
     @Operation(
             summary = "Upload Image from Client",
-            description = "The client will be upload an image",
+            description = "The client and Admin will be upload an image",
             tags = {"Upload Image"},
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Upload Image request with email, role, file, imageUrl",
@@ -112,24 +112,26 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ImageDTO> uploadImage(@ModelAttribute ImageDTO imageDTO) {
+    public ResponseEntity<ImageDTO> uploadImage(@ModelAttribute ImageDTO imageDTO, @RequestParam(required = false) String email) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String role = authentication.getAuthorities().stream()
-                    .map(grantedAuthority -> grantedAuthority.getAuthority())
-                    .findFirst()
-                    .orElse("ROLE_ANONYMOUS");
-            String email = (String) authentication.getPrincipal();
-
-            imageDTO.setRole(role);
-            imageDTO.setEmail(email);
+            String role = SecurityUtils.getRole();
+            String authenticatedEmail = SecurityUtils.getEmail();
+            if ("ROLE_ADMINISTRATOR".equals(role) && email != null) {
+                imageDTO.setEmail(email);
+            } else if ("ROLE_CLIENT".equals(role)) {
+                imageDTO.setEmail(authenticatedEmail);
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
             ImageDTO uploadImage = this.imageService.uploadImageAndSaveURL(imageDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.OK).body(uploadImage);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
+
+    //Change Password
     @PutMapping("/updatePassword")
     @PreAuthorize("hasAnyRole('CLIENT')")
     @Operation(
@@ -157,16 +159,11 @@ public class ClientController {
     )
     public ResponseEntity<UpdatePasswordResponseDTO> updatePassword(@RequestBody UpdatePasswordDTO updatePasswordDTO) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String role = authentication.getAuthorities().stream()
-                        .map(grantedAuthority -> grantedAuthority.getAuthority())
-                        .findFirst()
-                        .orElse("ROLE_ANONYMUS");
-        String email = (String) authentication.getPrincipal();
+        String role = SecurityUtils.getRole();
+        String email = SecurityUtils.getEmail();
+
         updatePasswordDTO.setRole(role);
         updatePasswordDTO.setEmail(email);
-        System.out.println("Received UpdatePasswordDTO: " + updatePasswordDTO);
-
         try {
             UpdatePasswordResponseDTO changePassword = this.passwordService.changePassword(updatePasswordDTO);
             return ResponseEntity.status(HttpStatus.OK).body(changePassword);
@@ -175,4 +172,159 @@ public class ClientController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+
+    //Profile
+    @GetMapping("/profile")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMINISTRATOR')")
+    @Operation(
+            summary = "Show profile from client or administrator",
+            description = "The client or admin will be see the client profile",
+            tags = {"Profile"},
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "See profile with email if you´re admin or only show your profile if you´re client",
+                    required = false,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ClientDTO.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Profile",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ProfileResponseDTO.class)
+                            )
+                    )
+            }
+    )
+
+    public ResponseEntity<ProfileResponseDTO> profile(@RequestParam(required = false) String email) {
+        String role = SecurityUtils.getRole();
+        String authenticatedEmail = SecurityUtils.getEmail();
+
+        try {
+            if ("ROLE_ADMINISTRATOR".equals(role) && email != null) {
+                ProfileResponseDTO profileResponse = this.clientService.profile(email);
+                return ResponseEntity.status(HttpStatus.OK).body(profileResponse);
+            } else if ("ROLE_CLIENT".equals(role)) {
+                ProfileResponseDTO profileResponse = this.clientService.profile(authenticatedEmail);
+                return ResponseEntity.status(HttpStatus.OK).body(profileResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+     //Update
+    @PutMapping("/update")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMINISTRATOR')")
+    @Operation(
+            summary = "Updating the client data",
+            description = "The customer or administrator will be able to update the customer's data.",
+            tags = {"Update"},
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Update the Client Data with email if you´re admin or if you´re client you will be edit your information",
+                    required = false,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UpdateDTO.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Profile",
+                            content = @Content(
+                                    mediaType = "applicatipn/json",
+                                    schema = @Schema(implementation = ProfileResponseDTO.class)
+                            )
+                    )
+            }
+    )
+
+     public ResponseEntity<UpdateDTO> update (@RequestParam(required = false) String email, @RequestBody UpdateDTO updateDTO) {
+
+        String role = SecurityUtils.getRole();
+        String authenticateEmail = SecurityUtils.getEmail();
+
+        try {
+            if("ROLE_ADMINISTRATOR".equals(role) && email != null) {
+                UpdateDTO updateClient = this.clientService.updateClient(email, updateDTO);
+                return ResponseEntity.status(HttpStatus.OK).body(updateClient);
+            } else if ("ROLE_CLIENT".equals(role)) {
+                UpdateDTO updateClient = this.clientService.updateClient(authenticateEmail, updateDTO);
+                return ResponseEntity.status(HttpStatus.OK).body(updateClient);
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+     }
+
+    @DeleteMapping("/delete/{email}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMINISTRATOR')")
+    @Operation(
+            summary = "Delete Client",
+            description = "The client or admin will be delete a client",
+            tags = {"Profile"},
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "The customer can delete himself/herself and the administrator will be able delete the client with his email address ",
+                    required = false,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Delete",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)
+                            )
+                    ),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Bad Request: Invalid email",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = String.class)
+                        )
+                ),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Client not found",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = String.class)
+                        )
+                )
+            }
+    )
+
+    public ResponseEntity<String> delete(@PathVariable String email) {
+        String role = SecurityUtils.getRole();
+        String authenticatedEmail = SecurityUtils.getEmail();
+
+        try {
+            String result = clientService.deleteClient(email, role, authenticatedEmail);
+            return ResponseEntity.ok(result);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado");
+        }
+    }
+
 }

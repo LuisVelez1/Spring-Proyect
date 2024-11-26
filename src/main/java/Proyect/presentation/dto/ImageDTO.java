@@ -1,6 +1,7 @@
 package Proyect.presentation.dto;
 
 import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
@@ -10,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 public class ImageDTO {
     private String email;
-    private String role;
+    @JsonIgnore
     private MultipartFile file;
     private String imageUrl;
 }

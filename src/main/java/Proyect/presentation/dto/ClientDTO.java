@@ -1,12 +1,12 @@
 package Proyect.presentation.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class ClientDTO {
     private String email;
     private String firstName;
