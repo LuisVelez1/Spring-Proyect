@@ -238,7 +238,7 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Profile",
+                            description = "Update Profile",
                             content = @Content(
                                     mediaType = "applicatipn/json",
                                     schema = @Schema(implementation = ProfileResponseDTO.class)
@@ -268,6 +268,7 @@ public class ClientController {
         }
      }
 
+     //Delete
     @DeleteMapping("/delete/{email}")
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMINISTRATOR')")
     @Operation(
@@ -326,5 +327,4 @@ public class ClientController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado");
         }
     }
-
 }

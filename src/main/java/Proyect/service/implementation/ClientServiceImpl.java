@@ -44,7 +44,7 @@ public class ClientServiceImpl implements IClientService {
     }
 
     @Override
-    public UpdateDTO updateClient(String email, UpdateDTO updateDTO) {
+        public UpdateDTO updateClient(String email, UpdateDTO updateDTO) {
         ClientEntity currentClient = this.clientRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with email " + email + " doesn't exist"));
 
         if (updateDTO.getFirstName() != null) {

@@ -105,8 +105,8 @@ CREATE TABLE Products (
   ```json
   {
     "email": "user@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
+    "firstName": "Falcao",
+    "lastName": "Garcia",
     "password": "password123",
     "phone": "1234567890"
   }
@@ -162,17 +162,64 @@ CREATE TABLE Products (
 }
 ```
 
+### **Administrador**
+#### Perfil
+- **Endpoint:** `GET /admin/profile`
+- **Descripción:** Permite a los administradores visualizar su perfil 
+- - **Headers:**
+  ```json
+  {
+    "Authorization": "Bearer <JWT_TOKEN>"
+  }
+  ```
+---
+#### Actualizar datos
+- **Endpoint:** `PUT /client/update`
+- **Descripción:** Permite al administrador cambiar sus datos 
+- **Headers:**
+  ```json
+  {
+    "Authorization": "Bearer <JWT_TOKEN>"
+  }
+  ```
+  ---
+#### Cambiar Cotraseña
+- **Endpoint:** `PUT /client/changePassword`
+- **Descripción:** Permite al administrador actualizar su contraseña antigua
+- **Headers:**
+  ```json
+  {
+    "Authorization": "Bearer <JWT_TOKEN>"
+  }
+  ```
+  ---
+#### Eliminar
+- **Endpoint:** `PUT /client/delete`
+- **Descripción:** Permite al administrador eliminar su perfil
+- **Headers:**
+  ```json
+  {
+    "Authorization": "Bearer <JWT_TOKEN>"
+  }
+  ```
+
+---
+#### Guardar o cambiar imagen
+- **Endpoint:** `PUT /client/upload`
+- **Descripción:** Permite al administrador subir una imagen de perfil
+- **Headers:**
+  ```json
+  {
+    "Authorization": "Bearer <JWT_TOKEN>"
+  }
+  ```
+
 ##
 
 ## Funcionalidades futuras
 1. **Gestión de productos**:
     - Registro y actualización de productos.
     - Consultas filtradas por categorías y disponibilidad.
-2. **Administrador**:
-    - Gestión de clientes.
-    - Manejo avanzado de roles y permisos.
-
----
 
 ## Cómo ejecutar el proyecto
 1. Clona el repositorio.
